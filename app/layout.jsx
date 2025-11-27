@@ -6,12 +6,12 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Joy Data Bundle | Premium Mobile Data",
-  description: "Fast, affordable mobile data bundles for MTN, Telecel, and AT.",
+  title: "Joy Data Bundle | Affordable Mobile Data",
+  description: "Fast, affordable mobile data bundles for MTN, Telecel, and AT. You will receive your data in 2-3 hours.",
   icons: {
     icon: "/logo.jpg",
   },
-    generator: 'v0.app'
+  generator: 'v0.app'
 }
 
 export default function RootLayout({ children }) {

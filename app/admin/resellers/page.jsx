@@ -1,15 +1,15 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-
 import { Label } from "@/components/ui/label"
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Check, X, MoreHorizontal, Plus } from "lucide-react"
+import { Check, X, MoreHorizontal, Plus, Search, ArrowUpDown } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { BulkTimestampSelector } from "@/components/admin/bulk-timestamp-selector"
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,13 @@ export default function ResellersPage() {
   const [inviteEmail, setInviteEmail] = useState("")
   const { toast } = useToast()
 
+  // Filter and sort state
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [sortBy, setSortBy] = useState("name")
+  const [sortOrder, setSortOrder] = useState("asc")
+  const [selectedResellers, setSelectedResellers] = useState([])
+
   const updateStatus = (id, newStatus) => {
     setResellers(resellers.map((r) => (r.id === id ? { ...r, status: newStatus } : r)))
   }
@@ -60,6 +67,88 @@ export default function ResellersPage() {
     })
     setInviteEmail("")
     setIsInviteOpen(false)
+  }
+
+  // Filter and sort resellers
+  const filteredResellers = useMemo(() => {
+    let result = [...resellers]
+
+    // Search filter
+    if (searchQuery) {
+      result = result.filter(r => 
+        r.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        r.id.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      result = result.filter(r => r.status === statusFilter)
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      let comparison = 0
+      switch (sortBy) {
+        case "name":
+          comparison = a.name.localeCompare(b.name)
+          break
+        case "sales":
+          comparison = a.sales - b.sales
+          break
+        case "joined":
+          comparison = new Date(a.joined) - new Date(b.joined)
+          break
+        default:
+          comparison = 0
+      }
+      return sortOrder === "desc" ? -comparison : comparison
+    })
+
+    return result
+  }, [resellers, searchQuery, statusFilter, sortBy, sortOrder])
+
+  const toggleSelectReseller = (resellerId) => {
+    setSelectedResellers(prev => 
+      prev.includes(resellerId) 
+        ? prev.filter(id => id !== resellerId)
+        : [...prev, resellerId]
+    )
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedResellers.length === filteredResellers.length) {
+      setSelectedResellers([])
+    } else {
+      setSelectedResellers(filteredResellers.map(r => r.id))
+    }
+  }
+
+  const handleBulkAction = (action) => {
+    if (action === "approve") {
+      setResellers(resellers.map(r => 
+        selectedResellers.includes(r.id) && r.status === "pending" 
+          ? { ...r, status: "active" } 
+          : r
+      ))
+      toast({
+        title: "Resellers Approved",
+        description: `${selectedResellers.length} reseller(s) have been approved.`,
+      })
+      setSelectedResellers([])
+    } else if (action === "reject") {
+      setResellers(resellers.map(r => 
+        selectedResellers.includes(r.id) && r.status === "pending" 
+          ? { ...r, status: "suspended" } 
+          : r
+      ))
+      toast({
+        title: "Resellers Rejected",
+        description: `${selectedResellers.length} reseller(s) have been rejected.`,
+      })
+      setSelectedResellers([])
+    }
   }
 
   return (
@@ -137,83 +226,158 @@ export default function ResellersPage() {
         </Card>
       </div>
 
+      {/* Bulk Selection */}
+      <BulkTimestampSelector
+        onBulkAction={handleBulkAction}
+        selectedCount={selectedResellers.length}
+        totalCount={filteredResellers.length}
+        actions={["approve", "reject"]}
+      />
+
       <Card>
-        <CardHeader>
-          <CardTitle>All Resellers</CardTitle>
-          <CardDescription>Manage reseller accounts and approvals.</CardDescription>
+        <CardHeader className="pb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <CardTitle>All Resellers</CardTitle>
+              <CardDescription>Manage reseller accounts and approvals.</CardDescription>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Search */}
+              <div className="relative w-full sm:w-48">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search..." 
+                  className="pl-8" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Status Filter */}
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Sort */}
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="sales">Sales</SelectItem>
+                  <SelectItem value="joined">Joined Date</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+              >
+                <ArrowUpDown className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Total Sales</TableHead>
-                <TableHead>Joined Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {resellers.map((reseller) => (
-                <TableRow key={reseller.id}>
-                  <TableCell className="font-medium">{reseller.name}</TableCell>
-                  <TableCell>{reseller.email}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        reseller.status === "active"
-                          ? "default"
-                          : reseller.status === "pending"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                      className={
-                        reseller.status === "active"
-                          ? "bg-green-500 hover:bg-green-600"
-                          : reseller.status === "pending"
-                            ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                            : ""
-                      }
-                    >
-                      {reseller.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>GHS {reseller.sales}</TableCell>
-                  <TableCell>{reseller.joined}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      {reseller.status === "pending" && (
-                        <>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-green-600 hover:bg-green-50"
-                            title="Approve"
-                            onClick={() => updateStatus(reseller.id, "active")}
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="h-8 w-8 text-red-600 hover:bg-red-50"
-                            title="Reject"
-                            onClick={() => updateStatus(reseller.id, "suspended")}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedResellers.length === filteredResellers.length && filteredResellers.length > 0}
+                      onChange={toggleSelectAll}
+                      className="rounded"
+                    />
+                  </TableHead>
+                  <TableHead className="whitespace-nowrap">Name</TableHead>
+                  <TableHead className="whitespace-nowrap">Email</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap">Total Sales</TableHead>
+                  <TableHead className="whitespace-nowrap">Joined Date</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredResellers.map((reseller) => (
+                  <TableRow key={reseller.id} className={selectedResellers.includes(reseller.id) ? "bg-slate-50" : ""}>
+                    <TableCell>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedResellers.includes(reseller.id)}
+                        onChange={() => toggleSelectReseller(reseller.id)}
+                        className="rounded"
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium whitespace-nowrap">{reseller.name}</TableCell>
+                    <TableCell className="whitespace-nowrap">{reseller.email}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      <Badge
+                        variant={
+                          reseller.status === "active"
+                            ? "default"
+                            : reseller.status === "pending"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                        className={
+                          reseller.status === "active"
+                            ? "bg-green-500 hover:bg-green-600"
+                            : reseller.status === "pending"
+                              ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                              : ""
+                        }
+                      >
+                        {reseller.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">GHS {reseller.sales}</TableCell>
+                    <TableCell className="whitespace-nowrap">{reseller.joined}</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
+                      <div className="flex justify-end gap-2">
+                        {reseller.status === "pending" && (
+                          <>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-green-600 hover:bg-green-50"
+                              title="Approve"
+                              onClick={() => updateStatus(reseller.id, "active")}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-red-600 hover:bg-red-50"
+                              title="Reject"
+                              onClick={() => updateStatus(reseller.id, "suspended")}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        <Button size="icon" variant="ghost" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert" // Added Alert import
-import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react" // Added AlertTriangle icon
+import { Loader2, CheckCircle2, AlertTriangle, Menu, HelpCircle, Search } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn, NETWORKS, formatCurrency } from "@/lib/utils"
 import Link from "next/link" // Added Link import
 
@@ -63,13 +64,51 @@ export default function BuyPage() {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="container max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-2">
             <img src="/logo.jpg" alt="Joy Data" className="h-8 w-8 rounded border border-slate-100" />
             <span className="font-bold text-lg text-slate-900">Joy Data</span>
-          </Link>
-          <Button variant="ghost" size="sm" asChild className="text-slate-500">
-            <Link href="/">Cancel</Link>
-          </Button>
+          </div>
+          
+          {/* Desktop Nav */}
+          <nav className="hidden sm:flex items-center gap-4">
+            <Link 
+              href="/track-order" 
+              className="text-sm font-medium text-slate-600 hover:text-cyan-600 transition-colors flex items-center gap-1"
+            >
+              <Search className="h-4 w-4" />
+              Track Order
+            </Link>
+            <Link 
+              href="/support" 
+              className="text-sm font-medium text-slate-600 hover:text-cyan-600 transition-colors flex items-center gap-1"
+            >
+              <HelpCircle className="h-4 w-4" />
+              Support
+            </Link>
+          </nav>
+
+          {/* Mobile Nav */}
+          <div className="sm:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right">
+                <div className="flex flex-col gap-6 mt-8">
+                  <Link href="/track-order" className="font-medium text-lg flex items-center gap-2">
+                    <Search className="h-5 w-5" />
+                    Track Order
+                  </Link>
+                  <Link href="/support" className="font-medium text-lg flex items-center gap-2">
+                    <HelpCircle className="h-5 w-5" />
+                    Support
+                  </Link>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </header>
 

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DollarSign, TrendingUp, Calendar, Download, Wallet, ArrowDownRight } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
+import { PayoutPopup } from "@/components/reseller/payout-popup"
 
 // Mock data for earnings
 const earningsHistory = [
@@ -110,10 +111,7 @@ export default function ResellerEarningsPage() {
           <h1 className="text-3xl font-bold text-slate-900">Earnings & Payouts</h1>
           <p className="text-slate-500 mt-1">Track your commissions and manage withdrawals</p>
         </div>
-        <Button className="bg-cyan-500 hover:bg-cyan-600">
-          <Wallet className="mr-2 h-4 w-4" />
-          Request Payout
-        </Button>
+        <PayoutPopup availableBalance={paidEarnings} />
       </div>
 
       {/* Stats Cards */}

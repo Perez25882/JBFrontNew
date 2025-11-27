@@ -102,11 +102,6 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent className="grid gap-2">
               <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
-                <Link href="/admin/orders">
-                  <RefreshCw className="mr-2 h-4 w-4" /> Retry Failed Orders
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start bg-transparent" asChild>
                 <Link href="/admin/complaints">
                   <AlertTriangle className="mr-2 h-4 w-4" /> Resolve New Complaints
                 </Link>

@@ -1,8 +1,21 @@
+"use client"
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Zap, LogOut, User } from "lucide-react"
+import { Zap, LogOut, User, Menu } from "lucide-react"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
 
 export default function ResellerLayout({ children }) {
+  const pathname = usePathname()
+
+  const isActive = (path) => {
+    if (path === "/reseller") {
+      return pathname === "/reseller"
+    }
+    return pathname?.startsWith(path)
+  }
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b sticky top-0 z-30">
@@ -15,14 +28,42 @@ export default function ResellerLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-              <Link href="/reseller" className="text-blue-600">
+              <Link 
+                href="/reseller" 
+                className={cn(
+                  "transition-colors hover:text-slate-900",
+                  isActive("/reseller") ? "text-blue-600" : "text-slate-600"
+                )}
+              >
                 Dashboard
               </Link>
-              <Link href="/reseller/earnings" className="hover:text-slate-900">
+              <Link 
+                href="/reseller/pricing" 
+                className={cn(
+                  "transition-colors hover:text-slate-900",
+                  isActive("/reseller/pricing") ? "text-blue-600" : "text-slate-600"
+                )}
+              >
+                Pricing
+              </Link>
+              <Link 
+                href="/reseller/earnings" 
+                className={cn(
+                  "transition-colors hover:text-slate-900",
+                  isActive("/reseller/earnings") ? "text-blue-600" : "text-slate-600"
+                )}
+              >
                 Earnings
               </Link>
-              <Link href="/reseller/settings" className="hover:text-slate-900">
+              <Link 
+                href="/reseller/settings" 
+                className={cn(
+                  "transition-colors hover:text-slate-900",
+                  isActive("/reseller/settings") ? "text-blue-600" : "text-slate-600"
+                )}
+              >
                 Settings
               </Link>
             </div>
@@ -35,7 +76,67 @@ export default function ResellerLayout({ children }) {
               <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
                 <User className="h-5 w-5" />
               </div>
-              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-600">
+              
+              {/* Mobile Menu */}
+              <div className="md:hidden">
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-6 w-6" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <div className="flex flex-col gap-6 mt-8">
+                      <div className="pb-4 border-b">
+                        <p className="font-medium">John Doe</p>
+                        <p className="text-xs text-slate-500">ID: RES-001</p>
+                      </div>
+                      <Link 
+                        href="/reseller" 
+                        className={cn(
+                          "font-medium text-lg transition-colors",
+                          isActive("/reseller") ? "text-blue-600" : "text-slate-900"
+                        )}
+                      >
+                        Dashboard
+                      </Link>
+                      <Link 
+                        href="/reseller/pricing" 
+                        className={cn(
+                          "font-medium text-lg transition-colors",
+                          isActive("/reseller/pricing") ? "text-blue-600" : "text-slate-900"
+                        )}
+                      >
+                        Pricing
+                      </Link>
+                      <Link 
+                        href="/reseller/earnings" 
+                        className={cn(
+                          "font-medium text-lg transition-colors",
+                          isActive("/reseller/earnings") ? "text-blue-600" : "text-slate-900"
+                        )}
+                      >
+                        Earnings
+                      </Link>
+                      <Link 
+                        href="/reseller/settings" 
+                        className={cn(
+                          "font-medium text-lg transition-colors",
+                          isActive("/reseller/settings") ? "text-blue-600" : "text-slate-900"
+                        )}
+                      >
+                        Settings
+                      </Link>
+                      <Button variant="ghost" className="justify-start px-0 text-red-600 hover:text-red-700 hover:bg-transparent mt-auto">
+                        <LogOut className="mr-2 h-5 w-5" />
+                        Sign Out
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+
+              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-red-600 hidden md:flex">
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>

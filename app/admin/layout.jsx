@@ -21,7 +21,7 @@ export default function AdminLayout({ children }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-72 bg-slate-900 border-slate-800 text-white">
-                <AdminSidebar className="border-none" />
+                <AdminSidebar className="border-none flex static w-full h-full" />
               </SheetContent>
             </Sheet>
             <h1 className="font-semibold text-lg text-slate-800">Dashboard</h1>
