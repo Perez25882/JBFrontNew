@@ -3,19 +3,33 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Zap, LogOut, User, Menu } from "lucide-react"
+import { Zap, LogOut, User, Menu, Loader2 } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 
-export default function ResellerLayout({ children }) {
+// Imports i added myself
+import { UserProvider, useUser } from "../contexts/UserContext"
+
+
+
+
+
+// ✅ Renamed to ResellerLayoutContent
+function ResellerLayoutContent({ children }) {
   const pathname = usePathname()
 
+  
+  // ✅ Use the user context hook
+  const { Reseller, isLoadingReseller, isErrorReseller} = useUser()
+  console.log("Called By ResellerLayoutContent:", Reseller)
+  
   const isActive = (path) => {
     if (path === "/reseller") {
       return pathname === "/reseller"
     }
     return pathname?.startsWith(path)
   }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b sticky top-0 z-30">
@@ -68,14 +82,24 @@ export default function ResellerLayout({ children }) {
               </Link>
             </div>
             <div className="h-8 w-px bg-slate-200 hidden md:block" />
+            
+            {/* ✅ Display user data from context */}
             <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-medium">John Doe</p>
-                <p className="text-xs text-slate-500">ID: RES-001</p>
-              </div>
-              <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
-                <User className="h-5 w-5" />
-              </div>
+              {isLoadingReseller ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-medium">{Reseller?.name || "User"}</p>
+                    <p className="text-xs text-slate-500">ID: {Reseller?.resellerCode || "---"}</p>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <User className="h-5 w-5" />
+                  </div>
+                </>
+              )}
               
               {/* Mobile Menu */}
               <div className="md:hidden">
@@ -88,8 +112,8 @@ export default function ResellerLayout({ children }) {
                   <SheetContent>
                     <div className="flex flex-col gap-6 mt-8">
                       <div className="pb-4 border-b">
-                        <p className="font-medium">John Doe</p>
-                        <p className="text-xs text-slate-500">ID: RES-001</p>
+                        <p className="font-medium">{Reseller?.name || "User"}</p>
+                        <p className="text-xs text-slate-500">ID: {Reseller?.resellerCode || "---"}</p>
                       </div>
                       <Link 
                         href="/reseller" 
@@ -145,5 +169,17 @@ export default function ResellerLayout({ children }) {
       </header>
       <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
+  )
+}
+
+// ✅ Main layout component wraps with UserProvider
+export default function ResellerLayout({ children }) {
+
+  console.log("ResellerLayout rendered")
+
+  return (
+    <UserProvider>
+      <ResellerLayoutContent>{children}</ResellerLayoutContent>
+    </UserProvider>
   )
 }
