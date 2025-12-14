@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Search, Filter, CheckCircle, XCircle, Eye, Clock } from "lucide-react"
+import { Search, Filter, CheckCircle, XCircle, Eye, Clock, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import {
   Dialog,
@@ -18,9 +18,60 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-// Mock Pending Payout Requests from Resellers
-const mockPendingPayouts = [
+// Mock Payout Requests from Resellers (both pending and completed)
+const mockPayouts = [
+  // Pending payouts (oldest first for pending)
+  {
+    id: "PAYOUT-001230",
+    date: "2023-11-20 09:15 AM",
+    phone: "024 555 0100",
+    resellerName: "Kwame Asante",
+    amount: 150.0,
+    method: "MTN MoMo",
+    momoNumber: "024 555 0100",
+    status: "pending",
+    walletBalance: 320.0,
+  },
+  {
+    id: "PAYOUT-001231",
+    date: "2023-11-20 11:30 AM",
+    phone: "050 555 0200",
+    resellerName: "Ama Serwaa",
+    amount: 280.0,
+    method: "Vodafone Cash",
+    momoNumber: "050 555 0200",
+    status: "pending",
+    walletBalance: 450.0,
+  },
+  {
+    id: "PAYOUT-001232",
+    date: "2023-11-21 08:45 AM",
+    phone: "027 555 0300",
+    resellerName: "Kofi Mensah",
+    amount: 500.0,
+    method: "MTN MoMo",
+    momoNumber: "027 555 0300",
+    status: "pending",
+    walletBalance: 780.0,
+  },
+  {
+    id: "PAYOUT-001233",
+    date: "2023-11-21 02:20 PM",
+    phone: "020 555 0400",
+    resellerName: "Yaa Pokua",
+    amount: 75.0,
+    method: "AirtelTigo Money",
+    momoNumber: "020 555 0400",
+    status: "pending",
+    walletBalance: 120.0,
+  },
   {
     id: "PAYOUT-001234",
     date: "2023-11-22 10:45 AM",
@@ -65,24 +116,239 @@ const mockPendingPayouts = [
     status: "pending",
     walletBalance: 120.0,
   },
+  // Add more pending for pagination testing
+  {
+    id: "PAYOUT-001238",
+    date: "2023-11-22 01:15 PM",
+    phone: "024 555 0500",
+    resellerName: "Akosua Frimpong",
+    amount: 200.0,
+    method: "MTN MoMo",
+    momoNumber: "024 555 0500",
+    status: "pending",
+    walletBalance: 350.0,
+  },
+  {
+    id: "PAYOUT-001239",
+    date: "2023-11-22 02:30 PM",
+    phone: "050 555 0600",
+    resellerName: "Kwaku Boateng",
+    amount: 350.0,
+    method: "Vodafone Cash",
+    momoNumber: "050 555 0600",
+    status: "pending",
+    walletBalance: 500.0,
+  },
+  {
+    id: "PAYOUT-001240",
+    date: "2023-11-22 03:45 PM",
+    phone: "027 555 0700",
+    resellerName: "Abena Osei",
+    amount: 180.0,
+    method: "MTN MoMo",
+    momoNumber: "027 555 0700",
+    status: "pending",
+    walletBalance: 250.0,
+  },
+  {
+    id: "PAYOUT-001241",
+    date: "2023-11-22 04:20 PM",
+    phone: "020 555 0800",
+    resellerName: "Kojo Amponsah",
+    amount: 420.0,
+    method: "AirtelTigo Money",
+    momoNumber: "020 555 0800",
+    status: "pending",
+    walletBalance: 600.0,
+  },
+  {
+    id: "PAYOUT-001242",
+    date: "2023-11-22 05:10 PM",
+    phone: "024 555 0900",
+    resellerName: "Efua Asante",
+    amount: 95.0,
+    method: "MTN MoMo",
+    momoNumber: "024 555 0900",
+    status: "pending",
+    walletBalance: 150.0,
+  },
+  {
+    id: "PAYOUT-001243",
+    date: "2023-11-22 06:30 PM",
+    phone: "050 555 1000",
+    resellerName: "Nana Adjei",
+    amount: 310.0,
+    method: "Vodafone Cash",
+    momoNumber: "050 555 1000",
+    status: "pending",
+    walletBalance: 400.0,
+  },
+  {
+    id: "PAYOUT-001244",
+    date: "2023-11-22 07:15 PM",
+    phone: "027 555 1100",
+    resellerName: "Akwasi Owusu",
+    amount: 225.0,
+    method: "MTN MoMo",
+    momoNumber: "027 555 1100",
+    status: "pending",
+    walletBalance: 300.0,
+  },
+  {
+    id: "PAYOUT-001245",
+    date: "2023-11-22 08:45 PM",
+    phone: "020 555 1200",
+    resellerName: "Adwoa Mensah",
+    amount: 160.0,
+    method: "AirtelTigo Money",
+    momoNumber: "020 555 1200",
+    status: "pending",
+    walletBalance: 220.0,
+  },
+  // Completed payouts (latest first for completed)
+  {
+    id: "PAYOUT-001250",
+    date: "2023-11-23 09:30 AM",
+    phone: "024 555 0500",
+    resellerName: "Akosua Frimpong",
+    amount: 200.0,
+    method: "MTN MoMo",
+    momoNumber: "024 555 0500",
+    status: "completed",
+    walletBalance: 0.0,
+  },
+  {
+    id: "PAYOUT-001251",
+    date: "2023-11-23 08:15 AM",
+    phone: "050 555 0600",
+    resellerName: "Kwaku Boateng",
+    amount: 350.0,
+    method: "Vodafone Cash",
+    momoNumber: "050 555 0600",
+    status: "completed",
+    walletBalance: 150.0,
+  },
+  {
+    id: "PAYOUT-001252",
+    date: "2023-11-22 11:45 PM",
+    phone: "027 555 0700",
+    resellerName: "Abena Osei",
+    amount: 180.0,
+    method: "MTN MoMo",
+    momoNumber: "027 555 0700",
+    status: "completed",
+    walletBalance: 70.0,
+  },
+  {
+    id: "PAYOUT-001253",
+    date: "2023-11-22 10:20 PM",
+    phone: "020 555 0800",
+    resellerName: "Kojo Amponsah",
+    amount: 420.0,
+    method: "AirtelTigo Money",
+    momoNumber: "020 555 0800",
+    status: "completed",
+    walletBalance: 180.0,
+  },
+  {
+    id: "PAYOUT-001254",
+    date: "2023-11-22 09:10 PM",
+    phone: "024 555 0900",
+    resellerName: "Efua Asante",
+    amount: 95.0,
+    method: "MTN MoMo",
+    momoNumber: "024 555 0900",
+    status: "completed",
+    walletBalance: 55.0,
+  },
+  {
+    id: "PAYOUT-001255",
+    date: "2023-11-21 06:30 PM",
+    phone: "050 555 1000",
+    resellerName: "Nana Adjei",
+    amount: 310.0,
+    method: "Vodafone Cash",
+    momoNumber: "050 555 1000",
+    status: "completed",
+    walletBalance: 90.0,
+  },
+  {
+    id: "PAYOUT-001256",
+    date: "2023-11-21 05:15 PM",
+    phone: "027 555 1100",
+    resellerName: "Akwasi Owusu",
+    amount: 225.0,
+    method: "MTN MoMo",
+    momoNumber: "027 555 1100",
+    status: "completed",
+    walletBalance: 75.0,
+  },
+  {
+    id: "PAYOUT-001257",
+    date: "2023-11-21 04:45 PM",
+    phone: "020 555 1200",
+    resellerName: "Adwoa Mensah",
+    amount: 160.0,
+    method: "AirtelTigo Money",
+    momoNumber: "020 555 1200",
+    status: "completed",
+    walletBalance: 60.0,
+  },
 ]
 
 export default function ConfirmPaymentPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [payouts, setPayouts] = useState(mockPendingPayouts)
+  const [payouts, setPayouts] = useState(mockPayouts)
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
   const [selectedPayout, setSelectedPayout] = useState(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false)
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [rejectReason, setRejectReason] = useState("")
 
-  const filteredPayouts = payouts.filter(
-    (payout) =>
+  const itemsPerPage = 8
+
+  // Sort payouts: oldest pending first, latest completed first
+  const sortedPayouts = [...payouts].sort((a, b) => {
+    if (a.status === "pending" && b.status === "pending") {
+      return new Date(a.date) - new Date(b.date) // Oldest first for pending
+    }
+    if (a.status === "completed" && b.status === "completed") {
+      return new Date(b.date) - new Date(a.date) // Latest first for completed
+    }
+    if (a.status === "pending" && b.status === "completed") {
+      return -1 // Pending comes before completed
+    }
+    if (a.status === "completed" && b.status === "pending") {
+      return 1 // Completed comes after pending
+    }
+    return 0
+  })
+
+  const filteredPayouts = sortedPayouts.filter((payout) => {
+    const matchesSearch = 
       payout.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payout.phone.includes(searchTerm) ||
       payout.resellerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       payout.momoNumber.includes(searchTerm)
-  )
+    
+    const matchesStatus = statusFilter === "all" || payout.status === statusFilter
+    
+    return matchesSearch && matchesStatus
+  })
+
+  // Pagination
+  const totalPages = Math.ceil(filteredPayouts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedPayouts = filteredPayouts.slice(startIndex, endIndex)
+
+  // Reset to page 1 when filter changes
+  const handleFilterChange = (newFilter) => {
+    setStatusFilter(newFilter)
+    setCurrentPage(1)
+  }
 
   const handleViewDetails = (payout) => {
     setSelectedPayout(payout)
@@ -113,6 +379,19 @@ export default function ConfirmPaymentPage() {
   }
 
   const pendingCount = payouts.filter((p) => p.status === "pending").length
+  const completedCount = payouts.filter((p) => p.status === "completed").length
+  const totalCount = payouts.length
+
+  const getFilterLabel = () => {
+    switch (statusFilter) {
+      case "pending":
+        return "Pending"
+      case "completed":
+        return "Completed"
+      default:
+        return "All Status"
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -126,12 +405,16 @@ export default function ConfirmPaymentPage() {
             <Clock className="w-4 h-4" />
             {pendingCount} Pending
           </Badge>
+          <Badge variant="outline" className="gap-1 px-3 py-1">
+            <CheckCircle className="w-4 h-4" />
+            {completedCount} Completed
+          </Badge>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pending Payout Requests</CardTitle>
+          <CardTitle>Payout Requests</CardTitle>
           <CardDescription>Review reseller payout requests and confirm after processing via MoMo.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -145,9 +428,26 @@ export default function ConfirmPaymentPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="icon">
-              <Filter className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Filter className="w-4 h-4" />
+                  {getFilterLabel()}
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleFilterChange("all")}>
+                  All Status ({totalCount})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleFilterChange("pending")}>
+                  Pending ({pendingCount})
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleFilterChange("completed")}>
+                  Completed ({completedCount})
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="border rounded-md">
@@ -165,14 +465,14 @@ export default function ConfirmPaymentPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayouts.length === 0 ? (
+                {paginatedPayouts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-slate-500">
-                      No pending payout requests found.
+                      No payout requests found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPayouts.map((payout) => (
+                  paginatedPayouts.map((payout) => (
                     <TableRow key={payout.id}>
                       <TableCell className="font-mono text-xs">{payout.id}</TableCell>
                       <TableCell className="text-xs text-slate-500">{payout.date}</TableCell>
@@ -186,7 +486,14 @@ export default function ConfirmPaymentPage() {
                       <TableCell className="text-xs">{payout.method}</TableCell>
                       <TableCell className="font-medium">{formatCurrency(payout.amount)}</TableCell>
                       <TableCell>
-                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100" variant="secondary">
+                        <Badge 
+                          className={
+                            payout.status === "pending"
+                              ? "bg-yellow-100 text-yellow-700 hover:bg-yellow-100"
+                              : "bg-green-100 text-green-700 hover:bg-green-100"
+                          } 
+                          variant="secondary"
+                        >
                           {payout.status}
                         </Badge>
                       </TableCell>
@@ -201,24 +508,28 @@ export default function ConfirmPaymentPage() {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                            onClick={() => handleConfirmPayout(payout)}
-                            title="Confirm Payout"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleRejectPayout(payout)}
-                            title="Reject Payout"
-                          >
-                            <XCircle className="w-4 h-4" />
-                          </Button>
+                          {payout.status === "pending" && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={() => handleConfirmPayout(payout)}
+                                title="Confirm Payout"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleRejectPayout(payout)}
+                                title="Reject Payout"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -227,6 +538,50 @@ export default function ConfirmPaymentPage() {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-slate-500">
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredPayouts.length)} of {filteredPayouts.length} results
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
